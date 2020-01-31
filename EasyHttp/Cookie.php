@@ -75,6 +75,7 @@ class EasyHttp_Cookie {
 	 * @param string|array $data Raw cookie data.
 	 */
 	function __construct( $data ) {
+		//var_dump($data);
 		if ( is_string( $data ) ) {
 			// Assume it's a header string direct from a previous request
 			$pairs = explode( ';', $data );
@@ -168,6 +169,7 @@ class EasyHttp_Cookie {
 	 * @return string Header encoded cookie name and value.
 	 */
 	function getHeaderValue() {
+		//var_dump($this);
 		if ( empty( $this->name ) || empty( $this->value ) )
 			return '';
 

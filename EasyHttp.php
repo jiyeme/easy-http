@@ -461,16 +461,30 @@ class EasyHttp {
 	 *
 	 * @param array $r Full array of args passed into ::request()
 	 */
+	// public static function buildCookieHeader( &$r ) {
+	// 	if ( ! empty($r['cookies']) ) {
+	// 		$cookies_header = '';
+	// 		foreach ( (array) $r['cookies'] as $cookie ) {
+	// 			$cookies_header .= $cookie->getHeaderValue() . '; ';
+	// 		}
+	// 		$cookies_header = substr( $cookies_header, 0, -2 );
+	// 		$r['headers']['cookie'] = $cookies_header;
+	// 	}
+	// }
 	public static function buildCookieHeader( &$r ) {
 		if ( ! empty($r['cookies']) ) {
 			$cookies_header = '';
-			foreach ( (array) $r['cookies'] as $cookie ) {
-				$cookies_header .= $cookie->getHeaderValue() . '; ';
+			foreach ( (array) $r['cookies'] as $cookie['name'] => $cookie['value']) {
+				$cookies = new EasyHttp_Cookie($cookie);
+				$cookies_header .= $cookies->getHeaderValue() . '; ';
 			}
 			$cookies_header = substr( $cookies_header, 0, -2 );
+			//var_dump($cookies_header);
+			//exit;
 			$r['headers']['cookie'] = $cookies_header;
 		}
 	}
+
 
 	/**
 	 * Decodes chunk transfer-encoding, based off the HTTP 1.1 specification.
