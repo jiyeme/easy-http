@@ -1,4 +1,5 @@
 <?php
+require 'EasyHttp.php';
 require 'EasyHttp/Curl.php';
 require 'EasyHttp/Cookie.php';
 require 'EasyHttp/Encoding.php';
