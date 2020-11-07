@@ -46,7 +46,7 @@ class EasyHttp_Streams {
 		$arrURL = parse_url($url);
 
 		if ( false === $arrURL )
-			return new EasyHttp_Error('http_request_failed', sprintf(__('Malformed URL: %s'), $url));
+			return new EasyHttp_Error('http_request_failed', sprintf('Malformed URL: %s', $url));
 
 		if ( 'http' != $arrURL['scheme'] && 'https' != $arrURL['scheme'] )
 			$url = preg_replace('|^' . preg_quote($arrURL['scheme'], '|') . '|', 'http', $url);
@@ -104,7 +104,7 @@ class EasyHttp_Streams {
 			$handle = fopen($url, 'r', false, $context);
 
 		if ( ! $handle )
-			return new EasyHttp_Error('http_request_failed', sprintf(__('Could not open handle for fopen() to %s'), $url));
+			return new EasyHttp_Error('http_request_failed', sprintf('Could not open handle for fopen() to %s', $url));
 
 		$timeout = (int) floor( $r['timeout'] );
 		$utimeout = $timeout == $r['timeout'] ? 0 : 1000000 * $r['timeout'] % 1000000;
@@ -123,7 +123,7 @@ class EasyHttp_Streams {
 				$stream_handle = fopen( $r['filename'], 'w+' );
 
 			if ( ! $stream_handle )
-				return new EasyHttp_Error( 'http_request_failed', sprintf( __( 'Could not open handle for fopen() to %s' ), $r['filename'] ) );
+				return new EasyHttp_Error( 'http_request_failed', sprintf( 'Could not open handle for fopen() to %s' ), $r['filename']);
 
 			stream_copy_to_stream( $handle, $stream_handle );
 
@@ -146,7 +146,7 @@ class EasyHttp_Streams {
 		// Streams does not provide an error code which we can use to see why the request stream stopped.
 		// We can however test to see if a location header is present and return based on that.
 		if ( isset($processedHeaders['headers']['location']) && 0 !== $args['_redirection'] )
-			return new EasyHttp_Error('http_request_failed', __('Too many redirects.'));
+			return new EasyHttp_Error('http_request_failed', 'Too many redirects.[3]');
 
 		if ( ! empty( $strResponse ) && isset( $processedHeaders['headers']['transfer-encoding'] ) && 'chunked' == $processedHeaders['headers']['transfer-encoding'] )
 			$strResponse = EasyHttp::chunkTransferDecode($strResponse);

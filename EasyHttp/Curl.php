@@ -34,7 +34,8 @@ class EasyHttp_Curl {
 			'method' => 'GET', 'timeout' => 5,
 			'redirection' => 5, 'httpversion' => '1.0',
 			'blocking' => true,
-			'headers' => array(), 'body' => null, 'cookies' => array()
+			'headers' => array(), 'body' => null, 'cookies' => array(),
+			'delay' => 0
 		);
 
 		$r = EasyHttp::parseArgs( $args, $defaults );
@@ -120,7 +121,7 @@ class EasyHttp_Curl {
 			else
 				$stream_handle = fopen( $r['filename'], 'w+' );
 			if ( ! $stream_handle )
-				return new EasyHttp_Error( 'http_request_failed', sprintf( __( 'Could not open handle for fopen() to %s' ), $r['filename'] ) );
+				return new EasyHttp_Error( 'http_request_failed', sprintf('Could not open handle for fopen() to %s', $r['filename'] ) );
 			curl_setopt( $handle, CURLOPT_FILE, $stream_handle );
 		}
 
@@ -162,7 +163,7 @@ class EasyHttp_Curl {
 			if ( $curl_error = curl_error( $handle ) )
 				return new EasyHttp_Error( 'http_request_failed', $curl_error );
 			if ( in_array( curl_getinfo( $handle, CURLINFO_HTTP_CODE ), array( 301, 302 ) ) )
-				return new EasyHttp_Error( 'http_request_failed', __( 'Too many redirects.' ) );
+				return new EasyHttp_Error( 'http_request_failed', 'Too many redirects.[0]');
 		}
 
 		$this->headers = '';
@@ -176,15 +177,32 @@ class EasyHttp_Curl {
 		if ( $r['stream'] )
 			fclose( $stream_handle );
 
+		// TODO:其它请求方式未添加该功能
+		usleep($r['delay']);
 		// See #11305 - When running under safe mode, redirection is disabled above. Handle it manually.
-		if ( ! empty( $theHeaders['headers']['location'] ) && 0 !== $r['_redirection'] ) { // _redirection: The requested number of redirections
-			if ( $r['redirection']-- > 0 ) {
+		if ( ! empty( $theHeaders['headers']['location'] ) && 0 !== $r['_redirection'] && $r['redirection'] > 0) { // _redirection: The requested number of redirections
+			if ( $r['redirection']-- >= 0 ) {
+				if(isset($theHeaders['headers']['set-cookie'])){
+					if(empty($r['cookies']))
+					{
+						foreach ($theHeaders['cookies'] as $value) {
+							$r['headers']['cookie'] .= ";" . $value->name ."=". $value->value . ";";
+						}
+						$r['headers']['cookie'] = str_replace(';;', ';', $r['headers']['cookie']);
+					}else
+					{
+						foreach($theHeaders['cookies'] as $value)
+						{
+							$r['cookies'][$value->name] = $value->value;
+						}
+					}
+				}
 				return $this->request( EasyHttp::make_absolute_url( $theHeaders['headers']['location'], $url ), $r );
 			} else {
-				return new EasyHttp_Error( 'http_request_failed', __( 'Too many redirects.' ) );
+				return new EasyHttp_Error( 'http_request_failed', 'Too many redirects.[1]');
 			}
 		}
-
+		
 		if ( true === $r['decompress'] && true === EasyHttp_Encoding::should_decode($theHeaders['headers']) )
 			$theBody = EasyHttp_Encoding::decompress( $theBody );
 

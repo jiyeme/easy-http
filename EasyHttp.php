@@ -144,7 +144,8 @@ class EasyHttp {
 			'decompress' => true,
 			'sslverify' => true,
 			'stream' => false,
-			'filename' => null
+			'filename' => null,
+			'delay' => 0
 		);
 
 		// Pre-parse for the HEAD checks.
@@ -168,10 +169,10 @@ class EasyHttp {
 		$arrURL = parse_url( $url );
 
 		if ( empty( $url ) || empty( $arrURL['scheme'] ) )
-			return new EasyHttp_Error('http_request_failed', __('A valid URL was not provided.'));
+			return new EasyHttp_Error('http_request_failed', 'A valid URL was not provided.');
 
 		if ( $this->block_request( $url ) )
-			return new EasyHttp_Error( 'http_request_failed', __( 'User has blocked requests through HTTP.' ) );
+			return new EasyHttp_Error( 'http_request_failed', 'User has blocked requests through HTTP.');
 
 		// Determine if this is a https call and pass that on to the transport functions
 		// so that we can blacklist the transports that do not support ssl verification
@@ -190,7 +191,7 @@ class EasyHttp {
 		if ( $r['stream'] ) {
 			$r['blocking'] = true;
 			if ( ! is_writable( dirname( $r['filename'] ) ) )
-				return new EasyHttp_Error( 'http_request_failed', __( 'Destination directory for file streaming does not exist or is not writable.' ) );
+				return new EasyHttp_Error( 'http_request_failed', 'Destination directory for file streaming does not exist or is not writable.');
 		}
 
 		if ( $r['headers'] === null )
@@ -226,7 +227,7 @@ class EasyHttp {
 				$r['headers']['Content-Length'] = 0;
 		} else {
 			if ( is_array( $r['body'] ) || is_object( $r['body'] ) ) {
-				$r['body'] = http_build_query( $r['body'], null, '&' );
+				$r['body'] = http_build_query( $r['body'], '', '&' );
 				if ( ! isset( $r['headers']['Content-Type'] ) )
 					$r['headers']['Content-Type'] = 'application/x-www-form-urlencoded; charset=' . EasyHttp::getOption( 'blog_charset' );
 				$r['headers']['Content-Length'] = strlen( $r['body'] );
@@ -293,14 +294,14 @@ class EasyHttp {
 
 		$class = $this->_get_first_available_transport( $args, $url );
 		if ( !$class )
-			return new EasyHttp_Error( 'http_failure', __( 'There are no HTTP transports available which can complete the requested request.' ) );
+			return new EasyHttp_Error( 'http_failure', 'There are no HTTP transports available which can complete the requested request.');
 
 		// Transport claims to support request, instantiate it and give it a whirl.
 		if ( empty( $transports[$class] ) )
 			$transports[$class] = new $class;
 
 		$response = $transports[$class]->request( $url, $args );
-
+		
 		//暂时不支持do_action
 		//do_action( 'http_api_debug', $response, 'response', $class, $args, $url );
 
@@ -461,16 +462,6 @@ class EasyHttp {
 	 *
 	 * @param array $r Full array of args passed into ::request()
 	 */
-	// public static function buildCookieHeader( &$r ) {
-	// 	if ( ! empty($r['cookies']) ) {
-	// 		$cookies_header = '';
-	// 		foreach ( (array) $r['cookies'] as $cookie ) {
-	// 			$cookies_header .= $cookie->getHeaderValue() . '; ';
-	// 		}
-	// 		$cookies_header = substr( $cookies_header, 0, -2 );
-	// 		$r['headers']['cookie'] = $cookies_header;
-	// 	}
-	// }
 	public static function buildCookieHeader( &$r ) {
 		if ( ! empty($r['cookies']) ) {
 			$cookies_header = '';
@@ -479,9 +470,10 @@ class EasyHttp {
 				$cookies_header .= $cookies->getHeaderValue() . '; ';
 			}
 			$cookies_header = substr( $cookies_header, 0, -2 );
-			//var_dump($cookies_header);
-			//exit;
-			$r['headers']['cookie'] = $cookies_header;
+			if(isset($r['headers']['cookie']) && !empty($r['headers']['cookie']))
+				$r['headers']['cookie'] .= ";{$cookies_header}";
+			else
+				$r['headers']['cookie'] = $cookies_header;
 		}
 	}
 
@@ -667,8 +659,8 @@ class EasyHttp {
 			$r =& $args;
 		else{
 			parse_str( $args, $r );
-			if ( get_magic_quotes_gpc() )
-				$r = EasyHttp::stripslashesDeep( $r );
+			// if ( get_magic_quotes_gpc() )
+			// 	$r = EasyHttp::stripslashesDeep( $r );
 			//$r = EasyHttp::applyFilters( 'wp_parse_str', $r );
 		}
 	

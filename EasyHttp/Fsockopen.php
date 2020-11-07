@@ -155,7 +155,7 @@ class EasyHttp_Fsockopen {
 			else
 				$stream_handle = fopen( $r['filename'], 'w+' );
 			if ( ! $stream_handle )
-				return new EasyHttp_Error( 'http_request_failed', sprintf( __( 'Could not open handle for fopen() to %s' ), $r['filename'] ) );
+				return new EasyHttp_Error( 'http_request_failed', sprintf('Could not open handle for fopen() to %s', $r['filename'] ) );
 
 			while ( ! feof($handle) ) {
 				$block = fread( $handle, 4096 );
@@ -195,7 +195,7 @@ class EasyHttp_Fsockopen {
 			if ( $r['redirection']-- > 0 ) {
 				return $this->request( EasyHttp::make_absolute_url( $arrHeaders['headers']['location'], $url ), $r);
 			} else {
-				return new EasyHttp_Error('http_request_failed', __('Too many redirects.'));
+				return new EasyHttp_Error('http_request_failed', 'Too many redirects.[2]');
 			}
 		}
 
